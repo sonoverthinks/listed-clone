@@ -8,6 +8,8 @@ import Result from "./Result";
 import { convertDateTimeToMDY } from "@/lib/utils";
 import LatestGuess from "./LatestGuess";
 import { Photo, Property } from "@/type/types";
+import { Loader2 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type GameProps = {
   initialProperty: Property | null;
@@ -35,6 +37,7 @@ const Game = ({ initialProperty, regionId }: GameProps) => {
   const propertyURL = getFullURL(property?.url);
 
   useEffect(() => {
+    setImages(null); // Clear out the old photos to trigger loading state
     const fetchPropertyPhotos = async (url: string) => {
       const rapidApiKey = process.env.NEXT_PUBLIC_X_RAPIDAPI_KEY;
 
@@ -95,7 +98,7 @@ const Game = ({ initialProperty, regionId }: GameProps) => {
   return (
     <div className="max-w-xl mx-auto p-2 space-y-1">
       <Header />
-      {images && (
+      {images ? (
         <CarouselImage
           soldOn={soldOn}
           numGuess={numGuess}
@@ -103,6 +106,10 @@ const Game = ({ initialProperty, regionId }: GameProps) => {
           isWon={isWon}
           propertyURL={property?.url as string}
         />
+      ) : (
+        <Skeleton className="w-full h-[330px] rounded-md flex items-center justify-center border border-text-clay/10">
+          <Loader2 className="w-16 h-16 text-horizon animate-spin" />
+        </Skeleton>
       )}
       <Info property={property} numGuess={numGuess} isWon={isWon} />
       <LatestGuess
