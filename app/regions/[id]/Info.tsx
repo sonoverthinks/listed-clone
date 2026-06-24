@@ -1,10 +1,9 @@
 import React from "react";
 import { convertDateTimeToMDY, convertToCash } from "@/lib/utils";
+import { Property } from "@/type/types";
 
 type InfoProps = {
-  property: {
-    [key: string]: any;
-  } | null;
+  property: Property | null;
   numGuess: number;
   isWon: boolean;
 };

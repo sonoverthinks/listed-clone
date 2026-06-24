@@ -5,41 +5,15 @@ import CarouselImage from "./Carousel";
 import Info from "./Info";
 import Guess from "./Guess";
 import Result from "./Result";
-import { houseData } from "@/lib/data";
-import {
-  convertDateTimeToMDY,
-  extractURL,
-  fetchPropertyImages,
-} from "@/lib/utils";
+import { convertDateTimeToMDY } from "@/lib/utils";
 import LatestGuess from "./LatestGuess";
-import { Photo } from "@/type/types";
-// import { prisma } from "@/lib/prisma";
-
-type Property = {
-  id: string;
-  url: string | null;
-  beds: number | null;
-  baths: number | null;
-  yearBuilt: number | null;
-  city: string | null;
-  state: string | null;
-  zip: string | null;
-  hoaDues: string | null;
-  regionId: string | null;
-  sqrft: string | null;
-  lotSize: string | null;
-  propertyType: number | null;
-  price: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  listDate: Date | null;
-  lastSoldDate: Date | null;
-};
+import { Photo, Property } from "@/type/types";
 
 type GameProps = {
   initialProperty: Property | null;
   regionId: string;
 };
+
 const Game = ({ initialProperty, regionId }: GameProps) => {
   const [numGuess, setNumGuess] = useState(0);
   const [isWon, setIsWon] = useState(false);
@@ -47,27 +21,30 @@ const Game = ({ initialProperty, regionId }: GameProps) => {
   const [property, setProperty] = useState(initialProperty);
   const [images, setImages] = useState<Photo[] | null>(null);
 
-  console.log(process.env.X_RAPID_KEY);
   const soldOn = property?.lastSoldDate
     ? convertDateTimeToMDY(property.lastSoldDate.toString())
     : "--/--/----";
 
-  console.log(soldOn);
-  const propertyURL =
-    property?.url ??
-    (`https://www.redfin.com${property?.url}` || "https://www.redfin.com");
+  // Build the complete Redfin URL cleanly
+  const getFullURL = (urlPath: string | null): string => {
+    if (!urlPath) return "https://www.redfin.com";
+    if (urlPath.startsWith("http")) return urlPath;
+    return `https://www.redfin.com${urlPath}`;
+  };
+
+  const propertyURL = getFullURL(property?.url);
 
   useEffect(() => {
-    const fetchPropertyImages = async (url: string) => {
+    const fetchPropertyPhotos = async (url: string) => {
       const rapidApiKey = process.env.NEXT_PUBLIC_X_RAPIDAPI_KEY;
 
       if (!rapidApiKey) {
         throw new Error(
-          "RAPID_API_KEY is not defined in environment variables"
+          "NEXT_PUBLIC_X_RAPIDAPI_KEY is not defined in environment variables"
         );
       }
       const res = await fetch(
-        `https://redfin-com-data.p.rapidapi.com/property/detail-photos?url=${url}`,
+        `https://redfin-com-data.p.rapidapi.com/property/detail-photos?url=${encodeURIComponent(url)}`,
         {
           headers: {
             "x-rapidapi-key": rapidApiKey,
@@ -76,18 +53,15 @@ const Game = ({ initialProperty, regionId }: GameProps) => {
         }
       );
       const data = await res.json();
-      console.log("🚀 ~ fetchPropertyImages ~ data:", data);
       const list: Photo[] = data.data;
       setImages(list);
     };
 
-    fetchPropertyImages(propertyURL);
+    fetchPropertyPhotos(propertyURL);
   }, [property, propertyURL]);
 
   const increaseNumGuess = async () => {
-    setNumGuess((prev) => {
-      return prev + 1;
-    });
+    setNumGuess((prev) => prev + 1);
   };
 
   const updateUserGuess = (newGuess: string) => {
@@ -117,6 +91,7 @@ const Game = ({ initialProperty, regionId }: GameProps) => {
     setUserGuesses([]);
     fetchRandomProperty(regionId);
   };
+
   return (
     <div className="max-w-xl mx-auto p-2 space-y-1">
       <Header />
@@ -147,7 +122,6 @@ const Game = ({ initialProperty, regionId }: GameProps) => {
           resetGame={resetGame}
         />
       )}
-      {/* {numGuess} */}
     </div>
   );
 };
