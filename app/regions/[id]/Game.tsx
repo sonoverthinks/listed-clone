@@ -26,7 +26,7 @@ const Game = ({ initialProperty, regionId }: GameProps) => {
     : "--/--/----";
 
   // Build the complete Redfin URL cleanly
-  const getFullURL = (urlPath: string | null): string => {
+  const getFullURL = (urlPath: string | null | undefined): string => {
     if (!urlPath) return "https://www.redfin.com";
     if (urlPath.startsWith("http")) return urlPath;
     return `https://www.redfin.com${urlPath}`;
